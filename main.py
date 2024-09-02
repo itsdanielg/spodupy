@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 from dotenv import load_dotenv
@@ -36,7 +38,7 @@ def find_duplicates(playlist1_url, playlist2_url=None, output=None, delete_dupli
     
     if delete_duplicates:
       duplicates = get_duplicate_tracks()
-      remove_duplicate_tracks(playlist2_url, duplicates)
+      # remove_duplicate_tracks(playlist2_url, duplicates)
       click.echo(f"Removed {len(duplicates)} duplicates from the second playlist.")
   else:
     if output:
