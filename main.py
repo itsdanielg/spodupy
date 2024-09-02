@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
 
 import os
-import sys
-from dotenv import load_dotenv
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyClientCredentials
+from dotenv import load_dotenv
 import click
 
 # Load environment variables from .env file
 load_dotenv()
 
-SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
-SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
-SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
+# Retrieve credentials from environment variables
+client_id = os.getenv('SPOTIPY_CLIENT_ID')
+client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
 
-scope = 'playlist-modify-public playlist-read-private'
+if not client_id or not client_secret:
+  raise ValueError("Missing Spotify API credentials. Please set SPOTIPY_CLIENT_ID and SPOTIPY_CLIENT_SECRET in your environment.")
 
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
-                                               client_secret=SPOTIPY_CLIENT_SECRET,
-                                               redirect_uri=SPOTIPY_REDIRECT_URI,
-                                               scope=scope))
+# Set up the Spotify client using client credentials flow
+auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+sp = spotipy.Spotify(auth_manager=auth_manager)
 
 @click.command()
 @click.argument('playlist1_url')
@@ -31,20 +30,13 @@ def find_duplicates(playlist1_url, playlist2_url=None, output=None, delete_dupli
 
   if playlist2_url:
     playlist2_tracks = get_playlist_tracks(playlist2_url)
-    if output:
-      find_and_print_duplicates(playlist1_tracks, playlist2_tracks, output)
-    else:
-      find_and_print_duplicates(playlist1_tracks, playlist2_tracks)
+    duplicates = find_and_print_duplicates(playlist1_tracks, playlist2_tracks, output)
     
-    if delete_duplicates:
-      duplicates = get_duplicate_tracks()
-      # remove_duplicate_tracks(playlist2_url, duplicates)
+    if delete_duplicates and duplicates:
+      remove_duplicate_tracks(playlist2_url, duplicates)
       click.echo(f"Removed {len(duplicates)} duplicates from the second playlist.")
   else:
-    if output:
-      find_and_print_duplicates_within_playlist(playlist1_tracks, output)
-    else:
-      find_and_print_duplicates_within_playlist(playlist1_tracks)
+    find_and_print_duplicates_within_playlist(playlist1_tracks, output)
 
 def get_playlist_tracks(playlist_url):
   playlist_id = extract_playlist_id(playlist_url)
@@ -61,7 +53,6 @@ def extract_playlist_id(playlist_url):
   return playlist_url.split('/')[-1].split('?')[0]
 
 def find_and_print_duplicates(playlist1_tracks, playlist2_tracks, output_file=None):
-  # Create a dictionary with preview_url as keys and details as values for playlist 1
   playlist1_details = {}
   for track in playlist1_tracks:
     if track['preview_url']:
@@ -85,24 +76,21 @@ def find_and_print_duplicates(playlist1_tracks, playlist2_tracks, output_file=No
         'type2': track['album']['album_type']
       })
 
-  # Print total tracks found in green
   total_tracks = len(duplicates)
   print(f"\033[92mTotal Tracks Found: {total_tracks}\033[0m")
 
-  # Print each duplicate with colored album names and number each track
   for i, track in enumerate(duplicates, start=1):
     album1_colored = colorize_album(track['album1'], track['type1'])
     album2_colored = colorize_album(track['album2'], track['type2'])
     print(f"{i}. {track['artist']} - {track['title']} ({album1_colored} & {album2_colored})")
 
-  # Write to output file if provided
   if output_file:
     with open(output_file, 'w') as f:
       for i, track in enumerate(duplicates, start=1):
         f.write(f"{i}. {track['artist']} - {track['title']} ({track['album1']} & {track['album2']})\n")
-
-    # Print the content of the output file in green
     print_in_terminal(output_file)
+
+  return duplicates
 
 def find_and_print_duplicates_within_playlist(playlist_tracks, output_file=None):
   preview_urls = {}
@@ -126,23 +114,20 @@ def find_and_print_duplicates_within_playlist(playlist_tracks, output_file=None)
           'type': track['album']['album_type']
         }
 
-  # Print total tracks found in green
   total_tracks = len(duplicates)
   print(f"\033[92mTotal Tracks Found: {total_tracks}\033[0m")
 
-  # Print each duplicate with colored album names and number each track
   for i, track in enumerate(duplicates, start=1):
     album_colored = colorize_album(track['album'], track['type'])
     print(f"{i}. {track['artist']} - {track['title']} ({album_colored})")
 
-  # Write to output file if provided
   if output_file:
     with open(output_file, 'w') as f:
       for i, track in enumerate(duplicates, start=1):
         f.write(f"{i}. {track['artist']} - {track['title']} ({track['album']})\n")
-
-    # Print the content of the output file in green
     print_in_terminal(output_file)
+
+  return duplicates
 
 def remove_duplicate_tracks(playlist_url, duplicates):
   playlist_id = extract_playlist_id(playlist_url)
@@ -160,7 +145,6 @@ def colorize_album(album_name, album_type):
   return f"{color}{album_name}\033[0m"
 
 def print_in_terminal(file_path):
-  # Print the content of the output file in green
   with open(file_path, 'r') as f:
     content = f.read()
     print(f"\033[92m{content}\033[0m")
