@@ -21,7 +21,5 @@ def main(playlist1_url, playlist2_url=None, output=None, delete_duplicates=False
     if output is not None:
         print_duplicates_to_output(duplicates, output)
 
-    # if delete_duplicates and duplicates:
-    #     remove_duplicate_tracks(playlist2_url, duplicates)
-    #     click.echo(f"Removed {len(duplicates)
-    #                           } duplicates from the second playlist.")
+    if delete_duplicates and playlist2_url and duplicates:
+        delete_playlist_tracks(playlist2_url, duplicates)
