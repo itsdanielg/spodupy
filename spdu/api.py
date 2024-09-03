@@ -2,6 +2,7 @@ import os
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from dotenv import load_dotenv
+from spdu.utils import extract_playlist_id
 
 # Load environment variables from .env file
 load_dotenv()
@@ -22,7 +23,10 @@ auth_manager = SpotifyClientCredentials(
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
 
-def get_playlist_tracks(playlist_url):
+def fetch_playlist_tracks(playlist_url):
+    if playlist_url is None:
+        return None
+
     playlist_id = extract_playlist_id(playlist_url)
     results = sp.playlist_tracks(playlist_id)
     tracks = results["items"]
@@ -34,21 +38,7 @@ def get_playlist_tracks(playlist_url):
     return [track["track"] for track in tracks]
 
 
-def extract_playlist_id(playlist_url):
-    return playlist_url.split("/")[-1].split("?")[0]
-
-
-def find_and_print_duplicates(playlist1_tracks, playlist2_tracks, output_file=None):
-    # Logic for finding duplicates and printing them
-    ...
-
-
-def find_and_print_duplicates_within_playlist(playlist_tracks, output_file=None):
-    # Logic for finding duplicates within a single playlist
-    ...
-
-
-def remove_duplicate_tracks(playlist_url, duplicates):
+def delete_playlist_tracks(playlist_url, duplicates):
     playlist_id = extract_playlist_id(playlist_url)
     track_uris = [track["uri"] for track in duplicates]
     sp.playlist_remove_all_occurrences_of_items(playlist_id, track_uris)
