@@ -1,6 +1,7 @@
 **/__pycache__
 /myenv
 output.txt
+*.json
 .env
 .cache
 .DS_Store
