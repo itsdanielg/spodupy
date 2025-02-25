@@ -4,7 +4,7 @@ from spdu.user import get_user
 sp = get_user()
 
 
-def extract_playlist_id(playlist_url):
+def get_playlist_id(playlist_url):
     return playlist_url.split("/")[-1].split("?")[0]
 
 
@@ -12,7 +12,7 @@ def fetch_playlist(playlist_url):
     if playlist_url is None:
         return None
 
-    playlist_id = extract_playlist_id(playlist_url)
+    playlist_id = get_playlist_id(playlist_url)
     playlist_details = sp.playlist(playlist_id)
 
     results = playlist_details["tracks"]

@@ -1,7 +1,11 @@
+import os
 from setuptools import setup, find_packages
 
+if not os.path.exists('.env') and os.path.exists('.env.example'):
+    os.rename('.env.example', '.env')
+
 setup(
-    name='spotify-duplicates',
+    name='spodupy',
     version='0.1.0',
     packages=find_packages(),
     install_requires=[
@@ -11,8 +15,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'spdu=spdu.main:main',  # `spdu` command will call the `main` function in `spdu.main`
-        ],
+            'spdu=spdu.main:main',
+        ]
     },
-    python_requires='>=3.12.5',  # specify your Python version requirements
+    python_requires='>=3.12.5'
 )

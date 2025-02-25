@@ -1,5 +1,7 @@
 **/__pycache__
 /myenv
+/spodupy.egg-info
+/build
 output.txt
 *.json
 .env

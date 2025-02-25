@@ -3,10 +3,10 @@ import os
 import json
 import time
 
-from spdu.api import extract_playlist_id, fetch_playlist
+from spdu.api import get_playlist_id, fetch_playlist
 from spdu.models import ApiPlaylist, ApiTracks, Track
 
-EXPIRATION = 3600
+EXPIRATION_TIME = 3600
 
 
 def read_json_file(file_path) -> ApiPlaylist:
@@ -30,7 +30,7 @@ def get_playlist(playlist_url, reset_cache=False) -> ApiPlaylist:
     if playlist_url is None:
         return
 
-    playlist_id = extract_playlist_id(playlist_url)
+    playlist_id = get_playlist_id(playlist_url)
     FILE_PATH = f'{playlist_id}.json'
 
     if reset_cache:
@@ -41,7 +41,7 @@ def get_playlist(playlist_url, reset_cache=False) -> ApiPlaylist:
     if os.path.exists(FILE_PATH):
         # Check if the file is expired
         file_mod_time = os.path.getmtime(FILE_PATH)
-        if time.time() - file_mod_time < EXPIRATION:
+        if time.time() - file_mod_time < EXPIRATION_TIME:
             # File is still valid, read from it
             return read_json_file(FILE_PATH)
 
